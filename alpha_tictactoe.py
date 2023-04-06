@@ -83,7 +83,7 @@ def play_tictactoe():
     while True:
         print(state)
         valid_moves = tictactoe.get_valid_moves(state)
-        print("valid moves", [i for i in range(tictactoe.action_size) if valid_moves[i] == 1])
+        print("valid moves", [i+1 for i in range(tictactoe.action_size) if valid_moves[i] == 1])
         action = int(input(f"{player}:")) - 1
 
         if valid_moves[action] == 0:
@@ -120,7 +120,7 @@ def mcts_tictactoe():
 
         if player == 1:
             valid_moves = tictactoe.get_valid_moves(state)
-            print("valid moves", [i for i in range(tictactoe.action_size) if valid_moves[i] == 1])
+            print("valid moves", [i+1 for i in range(tictactoe.action_size) if valid_moves[i] == 1])
             action = int(input(f"{player}:")) - 1
 
             if valid_moves[action] == 0:
