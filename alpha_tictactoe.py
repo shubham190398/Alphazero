@@ -58,8 +58,12 @@ class TicTacToe:
             return 0, False
 
     # Get the next player
-    def get_player(self, player):
+    def get_opponent(self, player):
         return -player
+
+    # Get opponent value
+    def get_opponent_value(self, value):
+        return -value
 
 
 # Function to play tictactoe with human input
@@ -89,7 +93,7 @@ def play_tictactoe():
                 print("Draw")
             break
 
-        player = tictactoe.get_player(player)
+        player = tictactoe.get_opponent(player)
 
 
 play_tictactoe()
