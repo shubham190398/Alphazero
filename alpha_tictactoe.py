@@ -44,5 +44,18 @@ class TicTacToe:
             np.sum(state[row, :]) == player * self.column_count
             or np.sum(state[:, column]) == player * self.row_count
             or np.sum(np.diag(state)) == player * self.row_count
-            or np.sum(np.diag(np.flip(state, axis=0))) == player ** self.column_count
+            or np.sum(np.diag(np.flip(state, axis=0))) == player * self.column_count
         )
+
+    # Check if the game has terminated. Return True if so. If game is a draw, return 0, else return 1.
+    def check_win_and_termination(self, state, action):
+        if self.check_win(state, action):
+            return 1, True
+        elif np.sum(self.get_valid_moves(state)) == 0:
+            return 0, True
+        else:
+            return 0, False
+
+    # Get the next player
+    def get_player(self, player):
+        return -player
