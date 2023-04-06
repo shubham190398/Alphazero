@@ -46,6 +46,23 @@ class Node:
         q_value = 1 - ((child.value_sum / child.visit_count) + 1) / 2
         return q_value + self.args['C'] * math.sqrt(math.log(self.visit_count) / child.visit_count)
 
+    # Expand the nodes
+    def expand(self):
+        action = np.random.choice(np.where(self.expandable_moves == 1)[0])
+        self.expandable_moves[action] = 0
+
+        """
+        The child will always think he is player 1. Whenever we need to switch players, we will flip
+        the board state instead.
+        """
+        child_state = self.state.copy()
+        child_state = self.game.get_next_state(child_state, action, 1)
+        child_state = self.game.change_perspective(child_state, -1)
+
+        # Add child Node
+        child = Node(self.game, self.args, child_state, self, action)
+        self.children.append(child)
+        return child
 
 # Definition for the Monte Carlo Tree Search
 class MCTS:
@@ -66,5 +83,13 @@ class MCTS:
         for search in range(self.args['num_searches']):
             node = root
 
+            # Selection
             while node.is_fully_expanded():
                 node = node.select()
+
+            value, is_terminated = self.game.check_win_and_termination(node.state, node.action_taken)
+            value = self.game.get_opponent_value(value)
+
+            # Do expansion and simulation if node is not terminal
+            if not is_terminated:
+                node = node.expand()
