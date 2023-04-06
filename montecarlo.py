@@ -88,6 +88,16 @@ class Node:
 
             rollout_player = self.game.get_opponent(rollout_player)
 
+    # Backpropagate the results
+    def backpropagate(self, value):
+        self.value_sum += value
+        self.visit_count += 1
+
+        value = self.game.get_opponent_value(value)
+
+        if self.parent is not None:
+            self.parent.backpropagate(value)
+
 
 # Definition for the Monte Carlo Tree Search
 class MCTS:
@@ -122,3 +132,6 @@ class MCTS:
 
                 # Simulation
                 value = node.simulate()
+
+            # Backpropagation
+            node.backpropagate(value)
