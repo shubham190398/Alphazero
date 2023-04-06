@@ -37,6 +37,10 @@ class TicTacToe:
     one entire diagonal. For the top right to bottom left diagonal, we flip the board before using np.diag
     """
     def check_win(self, state, action):
+        # Return false if no action is taken
+        if action is None:
+            return False
+
         row = action // self.row_count
         column = action % self.column_count
         player = state[row, column]
@@ -64,6 +68,10 @@ class TicTacToe:
     # Get opponent value
     def get_opponent_value(self, value):
         return -value
+
+    # Flip board state
+    def change_perspective(self, state, player):
+        return state * player
 
 
 # Function to play tictactoe with human input
