@@ -59,3 +59,36 @@ class TicTacToe:
     # Get the next player
     def get_player(self, player):
         return -player
+
+
+# Function to play tictactoe with human input
+def play_tictactoe():
+    tictactoe = TicTacToe()
+    player = 1
+    state = tictactoe.get_initial_state()
+
+    while True:
+        print(state)
+        valid_moves = tictactoe.get_valid_moves(state)
+        print("valid moves", [i for i in range(tictactoe.action_size) if valid_moves[i] == 1])
+        action = int(input(f"{player}:")) - 1
+
+        if valid_moves[action] == 0:
+            print("Invalid move, Try again")
+            continue
+
+        state = tictactoe.get_next_state(state, action, player)
+        value, is_terminated = tictactoe.check_win_and_termination(state, action)
+
+        if is_terminated:
+            print(state)
+            if value == 1:
+                print(player, "Won")
+            else:
+                print("Draw")
+            break
+
+        player = tictactoe.get_player(player)
+
+
+play_tictactoe()
