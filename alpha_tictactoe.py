@@ -4,7 +4,7 @@ Machine trained to play TicTacToe with Alpha Monte Carlo Tree Search
 
 # Importing dependencies
 import numpy as np
-from montecarlo import Node, MCTS
+from montecarlo import MCTS
 
 
 # Defining the Tic Tac Toe board
@@ -104,4 +104,47 @@ def play_tictactoe():
         player = tictactoe.get_opponent(player)
 
 
-play_tictactoe()
+# Play Tictactoe with the MCTS algorithm
+def mcts_tictactoe():
+    tictactoe = TicTacToe()
+    player = 1
+    args = {
+        'C': 1.41,
+        'num_searches': 1000
+    }
+    mcts = MCTS(tictactoe, args)
+    state = tictactoe.get_initial_state()
+
+    while True:
+        print(state)
+
+        if player == 1:
+            valid_moves = tictactoe.get_valid_moves(state)
+            print("valid moves", [i for i in range(tictactoe.action_size) if valid_moves[i] == 1])
+            action = int(input(f"{player}:")) - 1
+
+            if valid_moves[action] == 0:
+                print("Invalid move, Try again")
+                continue
+
+        # Have the action done by MCTS when it's the second player's turn
+        else:
+            neutral_state = tictactoe.change_perspective(state, player)
+            mcts_probs = mcts.search(neutral_state)
+            action = np.argmax(mcts_probs)
+
+        state = tictactoe.get_next_state(state, action, player)
+        value, is_terminated = tictactoe.check_win_and_termination(state, action)
+
+        if is_terminated:
+            print(state)
+            if value == 1:
+                print(player, "Won")
+            else:
+                print("Draw")
+            break
+
+        player = tictactoe.get_opponent(player)
+
+
+mcts_tictactoe()
