@@ -64,6 +64,31 @@ class Node:
         self.children.append(child)
         return child
 
+    # Simulate the game result
+    def simulate(self):
+        value, is_terminated = self.game.check_win_and_termination(self.state, self.action_taken)
+        value = self.game.get_opponent_value(value)
+
+        if is_terminated:
+            return value
+
+        rollout_state = self.state.copy()
+        rollout_player = 1
+
+        while True:
+            valid_moves = self.game.get_valid_moves(rollout_state)
+            action = np.random.choice(np.where(valid_moves == 1)[0])
+            rollout_state = self.game.get_next_state(rollout_state, action, rollout_player)
+            value, is_terminated = self.game.check_win_and_termination(rollout_state, action)
+
+            if is_terminated:
+                if rollout_player == -1:
+                    value = self.game.get_opponent_value(value)
+                return value
+
+            rollout_player = self.game.get_opponent(rollout_player)
+
+
 # Definition for the Monte Carlo Tree Search
 class MCTS:
     def __init__(self, game, args):
@@ -92,4 +117,8 @@ class MCTS:
 
             # Do expansion and simulation if node is not terminal
             if not is_terminated:
+                # Expansion
                 node = node.expand()
+
+                # Simulation
+                value = node.simulate()
