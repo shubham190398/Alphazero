@@ -16,3 +16,14 @@ class TicTacToe:
     # The board is initialized with zeros
     def get_initial_state(self):
         return np.zeros((self.row_count, self.column_count))
+
+    """
+    Get next state. Player action is a number between 0 and 8 so divide by row_count for row position and
+    take remainder after dividing by column count for column position
+    """
+    def get_next_state(self, state, action, player):
+        row = action // self.row_count
+        column = action % self.column_count
+        state[row, column] = player
+        return state
+
