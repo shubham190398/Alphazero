@@ -4,6 +4,7 @@ Machine trained to play TicTacToe with Alpha Monte Carlo Tree Search
 
 # Importing dependencies
 import numpy as np
+from montecarlo import Node, MCTS
 
 
 # Defining the Tic Tac Toe board
