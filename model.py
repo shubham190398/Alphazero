@@ -35,6 +35,15 @@ class ResNet(nn.Module):
             nn.Linear(32 * game.row_count * game.column_count, game.action_size)
         )
 
+        self.valueHead = nn.Sequential(
+            nn.Conv2d(num_hidden, 3, kernel_size=3, padding=1),
+            nn.BatchNorm2d(3),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(3 * game.row_count * game.column_count, 1),
+            nn.Tanh()
+        )
+
 
 # Definition for the Residual Blocks
 class ResBlock(nn.Module):
@@ -59,5 +68,3 @@ class ResBlock(nn.Module):
         x += residual
         x = F.relu(x)
         return x
-
-
