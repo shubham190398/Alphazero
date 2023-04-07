@@ -6,6 +6,8 @@ Machine trained to play TicTacToe with Alpha Monte Carlo Tree Search
 import numpy as np
 from montecarlo import MCTS
 import torch
+import matplotlib.pyplot as plt
+from model import ResNet
 
 # Setting manual seed for consistency
 torch.manual_seed(0)
@@ -158,4 +160,24 @@ def mcts_tictactoe():
         player = tictactoe.get_opponent(player)
 
 
-mcts_tictactoe()
+# Function to visualize output from the model
+def model_visualize():
+    tictactoe = TicTacToe()
+
+    state = tictactoe.get_initial_state()
+    state = tictactoe.get_next_state(state, 2, 1)
+    state = tictactoe.get_next_state(state, 6, -1)
+
+    print("State is currently", state)
+
+    tensor_state = torch.tensor(tictactoe.get_encoded_state(state)).unsqueeze(0)
+    model = ResNet(tictactoe, 4, 64)
+
+    policy, value = model(tensor_state)
+    policy = torch.softmax(policy, axis=1).squeeze(0).detach().cpu().numpy()
+
+    plt.bar(range(tictactoe.action_size), policy)
+    plt.show()
+
+
+model_visualize()
