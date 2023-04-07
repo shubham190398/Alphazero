@@ -5,6 +5,7 @@ Machine trained to play TicTacToe with Alpha Monte Carlo Tree Search
 # Importing dependencies
 import numpy as np
 from montecarlo import MCTS
+import torch
 
 
 # Defining the Tic Tac Toe board
@@ -72,6 +73,13 @@ class TicTacToe:
     # Flip board state
     def change_perspective(self, state, player):
         return state * player
+
+    # Encode the state to send it to the ResNet model
+    def get_encoded_state(self, state):
+        encoded_state = np.stack(
+            (state == -1, state == 0, state == 1)
+        ).astype(np.float32)
+        return encoded_state
 
 
 # Function to play tictactoe with human input

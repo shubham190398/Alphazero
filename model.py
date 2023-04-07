@@ -3,7 +3,6 @@ Creating the model architecture for training the Alphazero model
 """
 
 # Importing dependencies
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
