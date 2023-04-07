@@ -7,6 +7,9 @@ import numpy as np
 from montecarlo import MCTS
 import torch
 
+# Setting manual seed for consistency
+torch.manual_seed(0)
+
 
 # Defining the Tic Tac Toe board
 class TicTacToe:
