@@ -40,12 +40,15 @@ class AlphaNode:
         return best_child
 
     """
-    Get the UCB Score given by Q(s,a) + C*((ln(N)/n)**(0.5))
+    Get the UCB Score given by Q(s,a) + C*P(s,a)*((Sigma*N(s,b))**0.5)/(1 + N(s,a)
     We take 1-q_value because a bad q_value for the child implies a good q_value for the parent
     """
     def get_ucb(self, child):
-        q_value = 1 - ((child.value_sum / child.visit_count) + 1) / 2
-        return q_value + self.args['C'] * math.sqrt(math.log(self.visit_count) / child.visit_count)
+        if not child.visit_count:
+            q_value = 0
+        else:
+            q_value = 1 - ((child.value_sum / child.visit_count) + 1) / 2
+        return q_value + self.args['C'] * (math.sqrt(self.visit_count) / (1 + child.visit_count)) * child.prior
 
     # Expand the nodes in all directions depending on the policy and its probabilities
     def expand(self, policy):
@@ -117,7 +120,7 @@ class AlphaMCTS:
                 value = value.item()
 
                 # Expansion
-                node = node.expand(policy)
+                node.expand(policy)
 
             # Backpropagation
             node.backpropagate(value)
