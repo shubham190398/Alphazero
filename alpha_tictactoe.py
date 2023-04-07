@@ -8,6 +8,7 @@ from montecarlo import MCTS
 import torch
 import matplotlib.pyplot as plt
 from model import ResNet
+from alphamontecarlo import AlphaMCTS
 
 # Setting manual seed for consistency
 torch.manual_seed(0)
@@ -180,4 +181,50 @@ def model_visualize():
     plt.show()
 
 
-model_visualize()
+# Play Tictactoe with the Alpha MCTS algorithm
+def alpha_mcts_tictactoe():
+    tictactoe = TicTacToe()
+    player = 1
+    args = {
+        'C': 2,
+        'num_searches': 1000
+    }
+    model = ResNet(tictactoe, 4, 64)
+    model.eval()
+
+    mcts = AlphaMCTS(tictactoe, args, model)
+    state = tictactoe.get_initial_state()
+
+    while True:
+        print(state)
+
+        if player == 1:
+            valid_moves = tictactoe.get_valid_moves(state)
+            print("valid moves", [i for i in range(tictactoe.action_size) if valid_moves[i] == 1])
+            action = int(input(f"{player}:"))
+
+            if valid_moves[action] == 0:
+                print("Invalid move, Try again")
+                continue
+
+        # Have the action done by MCTS when it's the second player's turn
+        else:
+            neutral_state = tictactoe.change_perspective(state, player)
+            mcts_probs = mcts.search(neutral_state)
+            action = np.argmax(mcts_probs)
+
+        state = tictactoe.get_next_state(state, action, player)
+        value, is_terminated = tictactoe.check_win_and_termination(state, action)
+
+        if is_terminated:
+            print(state)
+            if value == 1:
+                print(player, "Won")
+            else:
+                print("Draw")
+            break
+
+        player = tictactoe.get_opponent(player)
+
+
+alpha_mcts_tictactoe()
