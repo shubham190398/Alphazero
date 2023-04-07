@@ -21,11 +21,18 @@ class ResNet(nn.Module):
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_hidden),
             nn.ReLU(),
-            nn.Conv2d
         )
 
         self.backBone = nn.ModuleList(
-            []
+            [ResBlock(num_hidden) for _ in range(num_resBlocks)]
+        )
+
+        self.policyHead = nn.Sequential(
+            nn.Conv2d(num_hidden, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(32 * game.row_count * game.column_count, game.action_size)
         )
 
 
