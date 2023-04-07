@@ -44,6 +44,19 @@ class ResNet(nn.Module):
             nn.Tanh()
         )
 
+    """
+    Forward function for the resnet block
+    """
+    def forward(self, x):
+        x = self.start_Block(x)
+
+        for resBlock in self.backBone:
+            x = resBlock(x)
+
+        policy = self.policyHead(x)
+        value = self.valueHead(x)
+        return policy, value
+
 
 # Definition for the Residual Blocks
 class ResBlock(nn.Module):
