@@ -1,9 +1,8 @@
-# Defining the Tic Tac Toe board
-
 # Importing dependencies
 import numpy as np
 
 
+# Defining the TicTacToe Board
 class TicTacToe:
     def __init__(self):
         self.row_count = 3
