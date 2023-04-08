@@ -16,10 +16,10 @@ class KaggleAgent:
             self.mcts = AlphaMCTS(self.game, self.args, self.model)
 
     # Defining the run function
-    def run(self, obs):
+    def run(self, obs, conf):
         player = obs['mark'] if obs['mark'] == 1 else -1
         state = np.array(obs['board']).reshape(self.game.row_count, self.game.column_count)
-        state[state == 2] == -1
+        state[state == 2] = -1
 
         state = self.game.change_perspective(player)
 
