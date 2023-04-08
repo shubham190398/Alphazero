@@ -277,7 +277,10 @@ def ConnectFourVisualizer():
 
     players = [player1.run, player2.run]
     env.run(players)
-    env.render(mode='ipython')
+    out = env.render(mode='html')
+    file = open("output.html", "w")
+    file.write(out)
+    file.close()
 
 
 # Main function

@@ -3,6 +3,8 @@ Class Definition for Kaggle Agent to provide dynamic visualization of the board
 """
 # Importing dependencies
 import numpy as np
+import torch
+
 from alphamontecarlo import AlphaMCTS
 
 
@@ -21,12 +23,14 @@ class KaggleAgent:
         state = np.array(obs['board']).reshape(self.game.row_count, self.game.column_count)
         state[state == 2] = -1
 
-        state = self.game.change_perspective(player)
+        state = self.game.change_perspective(state, player)
 
         if self.args['search']:
             policy = self.mcts.search(state)
         else:
-            policy, _ = self.model.predict(state, augment=self.args['augment'])
+            policy, _ = self.model(
+                torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
+            )
 
         valid_moves = self.game.get_valid_moves(state)
         policy *= valid_moves
