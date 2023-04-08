@@ -99,7 +99,6 @@ def model_visualize():
     state = tictactoe.get_next_state(state, 2, 1)
     state = tictactoe.get_next_state(state, 6, -1)
     state = tictactoe.get_next_state(state, 8, 1)
-    state = tictactoe.get_next_state(state, 7, -1)
 
     print("State is currently", state)
 
