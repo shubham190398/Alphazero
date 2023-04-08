@@ -244,7 +244,8 @@ def alphaTrain():
         'num_iterations': 4,
         'num_selfPlay_iterations': 500,
         'num_epochs': 4,
-        'batch_size': 64
+        'batch_size': 64,
+        'temperature': 1.25,
     }
 
     alphaZero = AlphaZero(model, optimizer, tictactoe, args)
