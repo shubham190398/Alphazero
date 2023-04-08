@@ -99,13 +99,13 @@ def model_visualize():
     state = tictactoe.get_next_state(state, 2, 1)
     state = tictactoe.get_next_state(state, 6, -1)
     state = tictactoe.get_next_state(state, 8, 1)
-    state = tictactoe.get_next_state(state, 4, -1)
+    state = tictactoe.get_next_state(state, 7, -1)
 
     print("State is currently", state)
 
     tensor_state = torch.tensor(tictactoe.get_encoded_state(state), device=device).unsqueeze(0)
     model = ResNet(tictactoe, 4, 64, device=device)
-    model.load_state_dict(torch.load('models/TicTacToe/model_3.pt', map_location=device))
+    model.load_state_dict(torch.load('models/TicTacToe/model_colab_2.pt', map_location=device))
     model.eval()
 
     policy, value = model(tensor_state)
@@ -183,4 +183,4 @@ def alphaTrain():
     alphaZero.learn()
 
 
-alphaTrain()
+model_visualize()

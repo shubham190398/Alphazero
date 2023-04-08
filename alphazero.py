@@ -37,7 +37,7 @@ class AlphaZero:
             memory.append((neutral_state, action_probs, player))
 
             temperature_action_probs = action_probs ** (1 / self.args['temperature'])
-            temperature_action_probs /= temperature_action_probs
+            temperature_action_probs /= np.sum(temperature_action_probs)
 
             action = np.random.choice(self.game.action_size, p=temperature_action_probs)
 
@@ -106,5 +106,5 @@ class AlphaZero:
             for _ in trange(self.args['num_epochs']):
                 self.train(memory)
 
-            torch.save(self.model.state_dict(), f"models/model_{iteration}_{self.game}.pt")
-            torch.save(self.optimizer.state_dict(), f"models/optimizer_{iteration}_{self.game}.pt")
+            torch.save(self.model.state_dict(), f"models/{self.game}/model_{iteration}.pt")
+            torch.save(self.optimizer.state_dict(), f"models/optimizer_{iteration}.pt")
