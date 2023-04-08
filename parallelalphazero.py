@@ -27,59 +27,69 @@ class AlphaMCTSParallel:
     This is wrapped with no grad to ensure we don't change gradients accidentally
     """
     @torch.no_grad()
-    def search(self, state):
-        root = AlphaNode(self.game, self.args, state, visit_count=1)
-
+    def search(self, states, spGames):
         policy, _ = self.model(
-            torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
+            torch.tensor(self.game.get_encoded_state(states), device=self.model.device)
         )
 
-        policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+        policy = torch.softmax(policy, axis=1).cpu().numpy()
+
+        # Create noise for each state with size parameter
         policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] * \
-                 np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size)
+                 np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size, size=policy.shape[0])
 
-        valid_moves = self.game.get_valid_moves(state)
-        policy *= valid_moves
+        for i, spg in enumerate(spGames):
+            spg_policy = policy[i]
+            valid_moves = self.game.get_valid_moves(states[i])
+            spg_policy *= valid_moves
 
-        policy /= np.sum(policy)
-        root.expand(policy)
+            spg_policy /= np.sum(spg_policy)
+
+            spg.root = AlphaNode(self.game, self.args, states[i], visit_count=1)
+            spg.root.expand(spg_policy)
 
         for search in range(self.args['num_searches']):
-            node = root
 
-            # Selection
-            while node.is_fully_expanded():
-                node = node.select()
+            for spg in spGames:
+                spg.node = None
+                node = spg.root
 
-            value, is_terminated = self.game.check_win_and_termination(node.state, node.action_taken)
-            value = self.game.get_opponent_value(value)
+                # Selection
+                while node.is_fully_expanded():
+                    node = node.select()
 
-            # Encode the tensor and do expansion
-            if not is_terminated:
+                value, is_terminated = self.game.check_win_and_termination(node.state, node.action_taken)
+                value = self.game.get_opponent_value(value)
+
+                # Do backpropagation if you reach a terminal node
+                if is_terminated:
+                    node.backpropagate(value)
+
+                else:
+                    spg.node = node
+
+            expandable_spGames = [mappingIdx for mappingIdx in range(len(spGames))
+                                  if spGames[mappingIdx].node is not None]
+
+            if len(expandable_spGames) > 0:
+                states = np.stack([spGames[mappingIdx].node.state for mappingIdx in expandable_spGames])
                 policy, value = self.model(
-                    torch.tensor(self.game.get_encoded_state(node.state), device=self.model.device).unsqueeze(0)
+                    torch.tensor(self.game.get_encoded_state(states), device=self.model.device)
                 )
-                policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+                policy = torch.softmax(policy, axis=1).cpu().numpy()
+                value = value.cpu().numpy()
 
-                # Prevent expansion along invalid moves
+            for i, mappingIdx in enumerate(expandable_spGames):
+                # Expand along expandable games
+                spg_policy, spg_value = policy[i], value[i]
+                node = spGames[mappingIdx].node
                 valid_moves = self.game.get_valid_moves(node.state)
-                policy *= valid_moves
-                policy /= np.sum(policy)
-
-                value = value.item()
+                spg_policy *= valid_moves
+                spg_policy /= np.sum(spg_policy)
 
                 # Expansion
-                node.expand(policy)
-
-            # Backpropagation
-            node.backpropagate(value)
-
-        # Get the probabilities for the different actions
-        action_probs = np.zeros(self.game.action_size)
-        for child in root.children:
-            action_probs[child.action_taken] = child.visit_count
-        action_probs /= np.sum(action_probs)
-        return action_probs
+                node.expand(spg_policy)
+                node.backpropagate(spg_value)
 
 
 # Class Definition of AlphaZero
@@ -98,12 +108,22 @@ class AlphaZeroParallel:
     Model plays against itself
     """
     def selfPlay(self):
-        memory = []
+        return_memory = []
         player = 1
+        spGames = [SPG(self.game) for spg in range(self.args['num_parallel_games'])]
 
-        while True:
-            neutral_state = self.game.change_perspective(state, player)
-            action_probs = self.mcts.search(neutral_state)
+        while len(spGames) > 0:
+            states = np.stack([spg.state for spg in spGames])
+
+            neutral_states = self.game.change_perspective(states, player)
+            self.mcts.search(neutral_states, spGames)
+
+            # Get the probabilities for the different actions
+            action_probs = np.zeros(self.game.action_size)
+            for child in root.children:
+                action_probs[child.action_taken] = child.visit_count
+            action_probs /= np.sum(action_probs)
+            return action_probs
 
             memory.append((neutral_state, action_probs, player))
 
