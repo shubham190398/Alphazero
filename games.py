@@ -95,37 +95,53 @@ class ConnectFour:
         return np.zeros((self.row_count, self.column_count))
 
     """
-    Get next state. Player action is a number between 0 and 8 so divide by row_count for row position and
-    take remainder after dividing by column count for column position
+    Get next state. Player action the deepest empty field in a column and 
+    fill it
     """
     def get_next_state(self, state, action, player):
-        row = action // self.row_count
-        column = action % self.column_count
-        state[row, column] = player
+        row = np.max(np.where(state[:, action] == 0))
+        state[row, action] = player
         return state
 
     # Check for valid moves left in the board
     def get_valid_moves(self, state):
-        return (state.reshape(-1) == 0).astype(np.uint8)
+        return (state[0] == 0).astype(np.uint8)
 
     """
-    Check if a player has won. If a player has won, they will occupy either one entire row, one entire column or 
-    one entire diagonal. For the top right to bottom left diagonal, we flip the board before using np.diag
+    Check if a player has won. If a player has won, they will have 4 tokens vertically,
+    horizontally or diagonally
     """
     def check_win(self, state, action):
         # Return false if no action is taken
         if action is None:
             return False
 
-        row = action // self.row_count
-        column = action % self.column_count
-        player = state[row, column]
+        row = np.min(np.where(state[:, action] != 0))
+        column = action
+        player = state[row][column]
 
-        return(
-            np.sum(state[row, :]) == player * self.column_count
-            or np.sum(state[:, column]) == player * self.row_count
-            or np.sum(np.diag(state)) == player * self.row_count
-            or np.sum(np.diag(np.flip(state, axis=0))) == player * self.column_count
+        # Define a count function for checking for wins
+        def count(offset_row, offset_column):
+            for i in range(1, self.in_a_row):
+
+                r = row + offset_row * i
+                c = action + offset_column* i
+                if (
+                    r < 0
+                    or r >= self.row_count
+                    or c < 0
+                    or c >= self.column_count
+                    or state[r][c] != player
+                ):
+                    return i - 1
+
+            return self.in_a_row - 1
+
+        return (
+            count(1, 0) >= self.in_a_row - 1
+            or (count(0, 1) + count(0, -1)) >= self.in_a_row - 1
+            or (count(1, 1) + count(-1, -1)) >= self.in_a_row - 1
+            or (count(1, -1) + count(-1, 1)) >= self.in_a_row - 1
         )
 
     # Check if the game has terminated. Return True if so. If game is a draw, return 0, else return 1.
