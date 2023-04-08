@@ -12,6 +12,8 @@ from alphamontecarlo import AlphaMCTS
 from alphazero import AlphaZero
 from games import TicTacToe, ConnectFour
 from parallelalphazero import AlphaZeroParallel
+import kaggle_environments
+from kaggle import KaggleAgent
 
 # Setting manual seed for consistency
 torch.manual_seed(0)
@@ -251,9 +253,36 @@ def alphaTrainTicTacToeParallel():
     alphaZero.learn()
 
 
+# Dynamic Visualization of ConnectFour
+def ConnectFourVisualizer():
+    game = ConnectFour()
+    args = {
+        'C': 2,
+        'search': True,
+        'num_searches': 600,
+        'dirichlet_epsilon': 0.1,
+        'dirichlet_alpha': 0.3,
+        'temperature': 0,
+    }
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = ResNet(game, 9, 128, device)
+    model.load_state_dict(torch.load("models/ConnectFour/model_1.pt", map_location=device))
+    model.eval()
+
+    env = kaggle_environments.make("connectx")
+
+    player1 = KaggleAgent(model, game, args)
+    player2 = KaggleAgent(model, game, args)
+
+    players = [player1.run, player2.run]
+    env.run(players)
+    env.render(mode='ipython')
+
+
 # Main function
 def main():
-    alphaTrainConnectFourParallel()
+    ConnectFourVisualizer()
 
 
 if __name__ == '__main__':
