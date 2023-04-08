@@ -110,7 +110,7 @@ class AlphaZeroParallel:
     def selfPlay(self):
         return_memory = []
         player = 1
-        spGames = [SPG(self.game) for spg in range(self.args['num_parallel_games'])]
+        spGames = [SPG(self.game) for _ in range(self.args['num_parallel_games'])]
 
         while len(spGames) > 0:
             states = np.stack([spg.state for spg in spGames])
@@ -118,40 +118,42 @@ class AlphaZeroParallel:
             neutral_states = self.game.change_perspective(states, player)
             self.mcts.search(neutral_states, spGames)
 
-            # Get the probabilities for the different actions
-            action_probs = np.zeros(self.game.action_size)
-            for child in root.children:
-                action_probs[child.action_taken] = child.visit_count
-            action_probs /= np.sum(action_probs)
-            return action_probs
+            for i in range(len(spGames))[::-1]:
+                spg = spGames[i]
 
-            memory.append((neutral_state, action_probs, player))
+                # Get the probabilities for the different actions
+                action_probs = np.zeros(self.game.action_size)
+                for child in spg.root.children:
+                    action_probs[child.action_taken] = child.visit_count
+                action_probs /= np.sum(action_probs)
 
-            temperature_action_probs = action_probs ** (1 / self.args['temperature'])
-            temperature_action_probs /= np.sum(temperature_action_probs)
+                spg.memory.append((spg.root.state, action_probs, player))
 
-            action = np.random.choice(self.game.action_size, p=temperature_action_probs)
+                temperature_action_probs = action_probs ** (1 / self.args['temperature'])
+                temperature_action_probs /= np.sum(temperature_action_probs)
 
-            state = self.game.get_next_state(state, action, player)
+                action = np.random.choice(self.game.action_size, p=temperature_action_probs)
 
-            value, is_terminated = self.game.check_win_and_termination(state, action)
+                spg.state = self.game.get_next_state(spg.state, action, player)
 
-            if is_terminated:
-                returnMemory = []
+                value, is_terminated = self.game.check_win_and_termination(spg.state, action)
 
-                for hist_neutral_state, hist_action_probs, hist_player in memory:
-                    hist_outcome = value if hist_player == player else self.game.get_opponent_value(value)
-                    returnMemory.append(
-                        (
-                            self.game.get_encoded_state(hist_neutral_state),
-                            hist_action_probs,
-                            hist_outcome
+                if is_terminated:
+                    for hist_neutral_state, hist_action_probs, hist_player in spg.memory:
+                        hist_outcome = value if hist_player == player else self.game.get_opponent_value(value)
+                        return_memory.append(
+                            (
+                                self.game.get_encoded_state(hist_neutral_state),
+                                hist_action_probs,
+                                hist_outcome
+                            )
                         )
-                    )
 
-                return returnMemory
+                    del(spGames[i])
 
             player = self.game.get_opponent(player)
+
+        return return_memory
 
     """
     Training method for the model where batches are shuffled
