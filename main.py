@@ -275,17 +275,47 @@ def ConnectFourVisualizer():
     player1 = KaggleAgent(model, game, args)
     player2 = KaggleAgent(model, game, args)
 
+    players = [player1.run, "random"]
+    env.run(players)
+    out = env.render(mode='html')
+    file = open("output_random_vs_agent.html", "w")
+    file.write(out)
+    file.close()
+
+
+# Dynamic Visualization of TicTacToe
+def TicTacToeVisualizer():
+    game = TicTacToe()
+    args = {
+        'C': 2,
+        'search': True,
+        'num_searches': 60,
+        'dirichlet_epsilon': 0.1,
+        'dirichlet_alpha': 0.3,
+        'temperature': 0,
+    }
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = ResNet(game, 4, 64, device)
+    model.load_state_dict(torch.load("models/TicTacToe/model_3.pt", map_location=device))
+    model.eval()
+
+    env = kaggle_environments.make("tictactoe")
+
+    player1 = KaggleAgent(model, game, args)
+    player2 = KaggleAgent(model, game, args)
+
     players = [player1.run, player2.run]
     env.run(players)
     out = env.render(mode='html')
-    file = open("output.html", "w")
+    file = open("output_tictactoe_agent_vs_agent.html", "w")
     file.write(out)
     file.close()
 
 
 # Main function
 def main():
-    ConnectFourVisualizer()
+    TicTacToeVisualizer()
 
 
 if __name__ == '__main__':
