@@ -9,6 +9,7 @@ import torch
 import matplotlib.pyplot as plt
 from model import ResNet
 from alphamontecarlo import AlphaMCTS
+from alphazero import AlphaZero
 
 # Setting manual seed for consistency
 torch.manual_seed(0)
@@ -181,7 +182,7 @@ def model_visualize():
     plt.show()
 
 
-# Play Tictactoe with the Alpha MCTS algorithm
+# Play Tictactoe with the Alpha MCTS algorithm output
 def alpha_mcts_tictactoe():
     tictactoe = TicTacToe()
     player = 1
@@ -227,4 +228,20 @@ def alpha_mcts_tictactoe():
         player = tictactoe.get_opponent(player)
 
 
-alpha_mcts_tictactoe()
+# Function to train the AlphaZero model
+def alphaTrain():
+    tictactoe = TicTacToe()
+    model = ResNet(tictactoe, 4, 64)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    args = {
+        'C': 2,
+        'num_searches': 60,
+        'num_iterations': 4,
+        'num_selfPlay_iterations': 500,
+        'num_epochs': 5
+    }
+
+    alphaZero = AlphaZero(model, optimizer, tictactoe, args)
+    alphaZero.learn()
+
+
