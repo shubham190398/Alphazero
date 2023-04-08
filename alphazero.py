@@ -5,6 +5,7 @@ import torch
 
 # Importing dependencies
 from alphamontecarlo import AlphaMCTS
+import numpy as np
 
 
 # Class Definition of AlphaZero
@@ -19,8 +20,42 @@ class AlphaZero:
         self.args = args
         self.mcts = AlphaMCTS(game, args, model)
 
+    """
+    Model plays against itself
+    """
     def selfPlay(self):
-        pass
+        memory = []
+        player = 1
+        state = self.game.get_initial_state()
+
+        while True:
+            neutral_state = self.game.change_perspective(state, player)
+            action_probs = self.mcts.search(neutral_state)
+
+            memory.append((neutral_state, action_probs, player))
+
+            action = np.random.choice(self.game.action_size, p=action_probs)
+
+            state = self.game.get_next_state(state, action, player)
+
+            value, is_terminated = self.game.check_win_and_termination(state, action)
+
+            if is_terminated:
+                returnMemory = []
+
+                for hist_neutral_state, hist_action_probs, hist_player in memory:
+                    hist_outcome = value if hist_player == player else self.game.get_opponent_value(value)
+                    returnMemory.append(
+                        (
+                            self.game.get_encoded_state(hist_neutral_state),
+                            hist_action_probs,
+                            hist_outcome
+                        )
+                    )
+
+                return returnMemory
+
+            player = self.game.get_opponent(player)
 
     def train(self, memory):
         pass
