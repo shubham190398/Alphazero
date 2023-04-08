@@ -36,8 +36,7 @@ class AlphaZero:
 
             memory.append((neutral_state, action_probs, player))
 
-            temperature_action_probs = action_probs ** (1 / self.args['temperature'])
-            action = np.random.choice(self.game.action_size, p=temperature_action_probs)
+            action = np.random.choice(self.game.action_size, p=action_probs)
 
             state = self.game.get_next_state(state, action, player)
 
