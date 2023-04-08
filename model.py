@@ -3,6 +3,7 @@ Creating the model architecture for training the Alphazero model
 """
 
 # Importing dependencies
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -13,7 +14,7 @@ class ResNet(nn.Module):
     Start Block = Conv layer + Batch Norm layer + ReLU
     Backbone = Array of different Res Blocks
     """
-    def __init__(self, game, num_resBlocks, num_hidden, device="cpu"):
+    def __init__(self, game, num_resBlocks, num_hidden, device=torch.device("cpu")):
         super().__init__()
 
         self.device = device

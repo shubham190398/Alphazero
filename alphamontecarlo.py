@@ -9,7 +9,7 @@ class AlphaNode:
     The node has a parent, a child, visit count, value sum, the game and its state,
     and the action taken. It doesn't need expandable moves any longer as it expands in all directions
     """
-    def __init__(self, game, args, state, parent=None, action_taken=None, prior=0):
+    def __init__(self, game, args, state, parent=None, action_taken=None, prior=0, visit_count=0):
         self.game = game
         self.args = args
         self.state = state
@@ -19,7 +19,7 @@ class AlphaNode:
 
         self.children = []
 
-        self.visit_count = 0
+        self.visit_count = visit_count
         self.value_sum = 0
 
     # Find if the node is fully expanded or not
@@ -93,7 +93,21 @@ class AlphaMCTS:
     """
     @torch.no_grad()
     def search(self, state):
-        root = AlphaNode(self.game, self.args, state)
+        root = AlphaNode(self.game, self.args, state, visit_count=1)
+
+        policy, _ = self.model(
+            torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
+        )
+
+        policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+        policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] * \
+                 np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size)
+
+        valid_moves = self.game.get_valid_moves(state)
+        policy *= valid_moves
+
+        policy /= np.sum(policy)
+        root.expand(policy)
 
         for search in range(self.args['num_searches']):
             node = root

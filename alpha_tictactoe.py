@@ -166,6 +166,8 @@ def mcts_tictactoe():
 def model_visualize():
     tictactoe = TicTacToe()
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     state = tictactoe.get_initial_state()
     state = tictactoe.get_next_state(state, 2, 1)
     state = tictactoe.get_next_state(state, 6, -1)
@@ -174,9 +176,9 @@ def model_visualize():
 
     print("State is currently", state)
 
-    tensor_state = torch.tensor(tictactoe.get_encoded_state(state)).unsqueeze(0)
-    model = ResNet(tictactoe, 4, 64)
-    model.load_state_dict(torch.load('models/model_3.pt'))
+    tensor_state = torch.tensor(tictactoe.get_encoded_state(state), device=device).unsqueeze(0)
+    model = ResNet(tictactoe, 4, 64, device=device)
+    model.load_state_dict(torch.load('models/model_3.pt', map_location=device))
     model.eval()
 
     policy, value = model(tensor_state)
@@ -246,6 +248,8 @@ def alphaTrain():
         'num_epochs': 4,
         'batch_size': 64,
         'temperature': 1.25,
+        'dirichlet_epsilon': 0.25,
+        'dirichlet_alpha': 0.3
     }
 
     alphaZero = AlphaZero(model, optimizer, tictactoe, args)
