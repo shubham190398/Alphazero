@@ -9,6 +9,77 @@ from tqdm import trange
 from random import shuffle
 import torch
 import torch.nn.functional as F
+from alphamontecarlo import AlphaNode
+
+
+# Defining an Alpha MCTS Parallel Class
+class AlphaMCTSParallel:
+    def __init__(self, game, args, model):
+        self.game = game
+        self.args = args
+        self.model = model
+
+    """
+    The search function should perform the three steps of Alpha Monte Carlo Tree Search:
+    1. Selection
+    2. Expansion
+    3. Backpropagation
+    This is wrapped with no grad to ensure we don't change gradients accidentally
+    """
+    @torch.no_grad()
+    def search(self, state):
+        root = AlphaNode(self.game, self.args, state, visit_count=1)
+
+        policy, _ = self.model(
+            torch.tensor(self.game.get_encoded_state(state), device=self.model.device).unsqueeze(0)
+        )
+
+        policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+        policy = (1 - self.args['dirichlet_epsilon']) * policy + self.args['dirichlet_epsilon'] * \
+                 np.random.dirichlet([self.args['dirichlet_alpha']] * self.game.action_size)
+
+        valid_moves = self.game.get_valid_moves(state)
+        policy *= valid_moves
+
+        policy /= np.sum(policy)
+        root.expand(policy)
+
+        for search in range(self.args['num_searches']):
+            node = root
+
+            # Selection
+            while node.is_fully_expanded():
+                node = node.select()
+
+            value, is_terminated = self.game.check_win_and_termination(node.state, node.action_taken)
+            value = self.game.get_opponent_value(value)
+
+            # Encode the tensor and do expansion
+            if not is_terminated:
+                policy, value = self.model(
+                    torch.tensor(self.game.get_encoded_state(node.state), device=self.model.device).unsqueeze(0)
+                )
+                policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
+
+                # Prevent expansion along invalid moves
+                valid_moves = self.game.get_valid_moves(node.state)
+                policy *= valid_moves
+                policy /= np.sum(policy)
+
+                value = value.item()
+
+                # Expansion
+                node.expand(policy)
+
+            # Backpropagation
+            node.backpropagate(value)
+
+        # Get the probabilities for the different actions
+        action_probs = np.zeros(self.game.action_size)
+        for child in root.children:
+            action_probs[child.action_taken] = child.visit_count
+        action_probs /= np.sum(action_probs)
+        return action_probs
 
 
 # Class Definition of AlphaZero
@@ -21,7 +92,7 @@ class AlphaZeroParallel:
         self.optimizer = optimizer
         self.game = game
         self.args = args
-        self.mcts = AlphaMCTS(game, args, model)
+        self.mcts = AlphaMCTSParallel(game, args, model)
 
     """
     Model plays against itself
@@ -29,7 +100,6 @@ class AlphaZeroParallel:
     def selfPlay(self):
         memory = []
         player = 1
-        state = self.game.get_initial_state()
 
         while True:
             neutral_state = self.game.change_perspective(state, player)
@@ -100,7 +170,7 @@ class AlphaZeroParallel:
             memory = []
             self.model.eval()
 
-            for _ in trange(self.args['num_selfPlay_iterations']):
+            for _ in trange(self.args['num_selfPlay_iterations'] // self.args['num_parallel_games']):
                 memory += self.selfPlay()
 
             self.model.train()
@@ -109,3 +179,12 @@ class AlphaZeroParallel:
 
             torch.save(self.model.state_dict(), f"models/{self.game}/model_{iteration}.pt")
             torch.save(self.optimizer.state_dict(), f"models/optimizer_{iteration}.pt")
+
+
+# Class Definition for Self Playing Game
+class SPG:
+    def __init__(self, game):
+        self.state = game.get_initial_state()
+        self.memory = []
+        self.root = None
+        self.node = None
