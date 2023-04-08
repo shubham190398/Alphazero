@@ -200,7 +200,7 @@ class AlphaZeroParallel:
                 self.train(memory)
 
             torch.save(self.model.state_dict(), f"models/{self.game}/model_{iteration}.pt")
-            torch.save(self.optimizer.state_dict(), f"models/optimizer_{iteration}.pt")
+            torch.save(self.optimizer.state_dict(), f"models/{self.game}/optimizer_{iteration}.pt")
 
 
 # Class Definition for Self Playing Game
