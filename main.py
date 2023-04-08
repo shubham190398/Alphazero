@@ -11,6 +11,7 @@ from model import ResNet
 from alphamontecarlo import AlphaMCTS
 from alphazero import AlphaZero
 from games import TicTacToe, ConnectFour
+from parallelalphazero import AlphaZeroParallel
 
 # Setting manual seed for consistency
 torch.manual_seed(0)
@@ -204,9 +205,55 @@ def alphaTrainConnectFour():
     alphaZero.learn()
 
 
+# Parallel ConnectFour Trainer
+def alphaTrainConnectFourParallel():
+    game = ConnectFour()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = ResNet(game, 9, 128, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+    args = {
+        'C': 2,
+        'num_searches': 600,
+        'num_iterations': 8,
+        'num_selfPlay_iterations': 600,
+        'num_epochs': 4,
+        'num_parallel_games': 200,
+        'batch_size': 128,
+        'temperature': 1.25,
+        'dirichlet_epsilon': 0.25,
+        'dirichlet_alpha': 0.3
+    }
+
+    alphaZero = AlphaZeroParallel(model, optimizer, game, args)
+    alphaZero.learn()
+
+
+# Parallel ConnectFour Trainer
+def alphaTrainTicTacToeParallel():
+    game = TicTacToe()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = ResNet(game, 4, 64, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+    args = {
+        'C': 2,
+        'num_searches': 60,
+        'num_iterations': 4,
+        'num_selfPlay_iterations': 500,
+        'num_parallel_games': 100,
+        'num_epochs': 4,
+        'batch_size': 64,
+        'temperature': 1.25,
+        'dirichlet_epsilon': 0.25,
+        'dirichlet_alpha': 0.3
+    }
+
+    alphaZero = AlphaZeroParallel(model, optimizer, game, args)
+    alphaZero.learn()
+
+
 # Main function
 def main():
-    alphaTrainConnectFour()
+    alphaTrainConnectFourParallel()
 
 
 if __name__ == '__main__':
