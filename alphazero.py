@@ -1,12 +1,13 @@
 """
 Contains the Alphazero class for training a model to play TicTacToe or ConnectFour
 """
-import torch
-
 # Importing dependencies
 from alphamontecarlo import AlphaMCTS
 import numpy as np
 from tqdm import trange
+from random import shuffle
+import torch
+import torch.nn.functional as F
 
 
 # Class Definition of AlphaZero
@@ -58,8 +59,33 @@ class AlphaZero:
 
             player = self.game.get_opponent(player)
 
+    """
+    Training method for the model where batches are shuffled
+    """
     def train(self, memory):
-        pass
+        shuffle(memory)
+
+        for batchIdx in range(0, len(memory), self.args['batch_size']):
+            sample = memory[batchIdx:min(len(memory) - 1, batchIdx + self.args['batch_size'])]
+            state, policy_targets, value_targets = zip(*sample)
+
+            state, policy_targets, value_targets = np.array(state), np.array(policy_targets), \
+                np.array(value_targets).reshape(-1, 1)
+
+            state = torch.tensor(state, dtype=torch.float32)
+            policy_targets = torch.tensor(policy_targets, dtype=torch.float32)
+            value_targets = torch.tensor(value_targets, dtype=torch.float32)
+
+            output_policy, output_value = self.model(state)
+
+            policy_loss = F.cross_entropy(output_policy, policy_targets)
+            value_loss = F.mse_loss(output_value, value_targets)
+
+            loss = policy_loss + value_loss
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
     """
     For each iteration create training data for one cycle, train the model and
