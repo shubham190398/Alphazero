@@ -238,10 +238,12 @@ def alphaTrain():
         'num_searches': 60,
         'num_iterations': 4,
         'num_selfPlay_iterations': 500,
-        'num_epochs': 5
+        'num_epochs': 4,
+        'batch_size': 64
     }
 
     alphaZero = AlphaZero(model, optimizer, tictactoe, args)
     alphaZero.learn()
 
 
+alphaTrain()
