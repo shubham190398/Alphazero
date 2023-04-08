@@ -237,7 +237,7 @@ def alphaTrain():
     tictactoe = TicTacToe()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = ResNet(tictactoe, 4, 64, device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
     args = {
         'C': 2,
         'num_searches': 60,
@@ -251,4 +251,4 @@ def alphaTrain():
     alphaZero.learn()
 
 
-model_visualize()
+alphaTrain()
