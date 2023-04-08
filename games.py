@@ -125,7 +125,7 @@ class ConnectFour:
             for i in range(1, self.in_a_row):
 
                 r = row + offset_row * i
-                c = action + offset_column* i
+                c = action + offset_column * i
                 if (
                     r < 0
                     or r >= self.row_count
