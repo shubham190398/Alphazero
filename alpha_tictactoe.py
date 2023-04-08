@@ -105,7 +105,7 @@ def model_visualize():
 
     tensor_state = torch.tensor(tictactoe.get_encoded_state(state), device=device).unsqueeze(0)
     model = ResNet(tictactoe, 4, 64, device=device)
-    model.load_state_dict(torch.load('models/model_3.pt', map_location=device))
+    model.load_state_dict(torch.load('models/TicTacToe/model_3.pt', map_location=device))
     model.eval()
 
     policy, value = model(tensor_state)
