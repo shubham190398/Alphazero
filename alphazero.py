@@ -103,5 +103,5 @@ class AlphaZero:
             for _ in trange(self.args['num_epochs']):
                 self.train(memory)
 
-            torch.save(self.model.state_dict(), f"model_{iteration}.pt")
-            torch.save(self.optimizer.state_dict(), f"optimizer_{iteration}.pt")
+            torch.save(self.model.state_dict(), f"models/model_{iteration}.pt")
+            torch.save(self.optimizer.state_dict(), f"models/optimizer_{iteration}.pt")
