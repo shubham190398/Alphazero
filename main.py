@@ -183,4 +183,10 @@ def alphaTrain():
     alphaZero.learn()
 
 
-model_visualize()
+# Main function
+def main():
+    model_visualize()
+
+
+if __name__ == '__main__':
+    main()
