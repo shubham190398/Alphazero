@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from model import ResNet
 from alphamontecarlo import AlphaMCTS
 from alphazero import AlphaZero
-from games import TicTacToe
+from games import TicTacToe, ConnectFour
 
 # Setting manual seed for consistency
 torch.manual_seed(0)
@@ -160,8 +160,8 @@ def alpha_mcts_tictactoe():
         player = tictactoe.get_opponent(player)
 
 
-# Function to train the AlphaZero model
-def alphaTrain():
+# Function to train the AlphaZero model for TicTacToe
+def alphaTrainTicTacToe():
     game = TicTacToe()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = ResNet(game, 4, 64, device)
@@ -182,9 +182,31 @@ def alphaTrain():
     alphaZero.learn()
 
 
+# Function to train the AlphaZero model for ConnectFour
+def alphaTrainConnectFour():
+    game = ConnectFour()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = ResNet(game, 9, 128, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+    args = {
+        'C': 2,
+        'num_searches': 600,
+        'num_iterations': 8,
+        'num_selfPlay_iterations': 500,
+        'num_epochs': 4,
+        'batch_size': 128,
+        'temperature': 1.25,
+        'dirichlet_epsilon': 0.25,
+        'dirichlet_alpha': 0.3
+    }
+
+    alphaZero = AlphaZero(model, optimizer, game, args)
+    alphaZero.learn()
+
+
 # Main function
 def main():
-    model_visualize()
+    alphaTrainConnectFour()
 
 
 if __name__ == '__main__':
