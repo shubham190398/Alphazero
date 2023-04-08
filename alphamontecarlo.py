@@ -108,7 +108,7 @@ class AlphaMCTS:
             # Encode the tensor and do expansion
             if not is_terminated:
                 policy, value = self.model(
-                    torch.tensor(self.game.get_encoded_state(node.state)).unsqueeze(0)
+                    torch.tensor(self.game.get_encoded_state(node.state), device=self.model.device).unsqueeze(0)
                 )
                 policy = torch.softmax(policy, axis=1).squeeze(0).cpu().numpy()
 

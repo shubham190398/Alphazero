@@ -13,9 +13,10 @@ class ResNet(nn.Module):
     Start Block = Conv layer + Batch Norm layer + ReLU
     Backbone = Array of different Res Blocks
     """
-    def __init__(self, game, num_resBlocks, num_hidden):
+    def __init__(self, game, num_resBlocks, num_hidden, device="cpu"):
         super().__init__()
 
+        self.device = device
         self.start_Block = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_hidden),
@@ -43,6 +44,7 @@ class ResNet(nn.Module):
             nn.Tanh()
         )
 
+        self.to(device)
     """
     Forward function for the resnet block
     """

@@ -235,7 +235,8 @@ def alpha_mcts_tictactoe():
 # Function to train the AlphaZero model
 def alphaTrain():
     tictactoe = TicTacToe()
-    model = ResNet(tictactoe, 4, 64)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = ResNet(tictactoe, 4, 64, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     args = {
         'C': 2,
