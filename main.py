@@ -267,7 +267,7 @@ def ConnectFourVisualizer():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = ResNet(game, 9, 128, device)
-    model.load_state_dict(torch.load("models/ConnectFour/model_1.pt", map_location=device))
+    model.load_state_dict(torch.load("models/ConnectFour/model_4.pt", map_location=device))
     model.eval()
 
     env = kaggle_environments.make("connectx")
@@ -315,7 +315,7 @@ def TicTacToeVisualizer():
 
 # Main function
 def main():
-    TicTacToeVisualizer()
+    ConnectFourVisualizer()
 
 
 if __name__ == '__main__':
